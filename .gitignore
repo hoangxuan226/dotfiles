@@ -1,0 +1,18 @@
+# Auto-generated config directories - ignore everything except nvim
+nvim/.config/*
+!nvim/.config/nvim/
+
+# Specific auto-generated dirs (redundant but explicit)
+nvim/.config/fcitx/
+nvim/.config/fcitx5/
+nvim/.config/github-copilot/
+nvim/.config/htop/
+nvim/.config/ibus/
+nvim/.config/lazygit/
+nvim/.config/nextjs-nodejs/
+
+# Vim/Neovim runtime files
+*.swp
+*.swo
+*~
+.DS_Store
