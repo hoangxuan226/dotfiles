@@ -1,6 +1,8 @@
-# Auto-generated config directories - ignore everything except nvim
+# Auto-generated config directories
 config/.config/*
 !config/.config/nvim/
+!config/.config/kitty/
+!config/.config/fontconfig/
 
 # Vim/Neovim runtime files
 *.swp
