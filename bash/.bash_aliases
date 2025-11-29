@@ -20,3 +20,16 @@ extract() {
     echo "❌ Không tìm thấy file: $1"
   fi
 }
+
+# ======== HSMS
+# Alias for building and pushing backend-dev Docker image
+alias hsms-dbe='docker build -f Dockerfile -t hsms68/backend-dev:latest . && docker push hsms68/backend-dev:latest'
+
+# Alias for building and pushing frontend-staging Docker image
+alias hsms-dfe='docker compose build frontend-staging && docker push hsms68/frontend-staging:latest'
+
+# Alias for local revalidate API
+alias hsms-rvld-l='curl -X POST "http://localhost:3000/api/revalidate?path=/,layout"'
+
+# Alias for staging revalidate API
+alias hsms-rvld-s='curl -X POST "https://staging.hsms.io.vn/api/revalidate?path=/,layout"'
