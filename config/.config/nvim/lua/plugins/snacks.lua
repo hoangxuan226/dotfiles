@@ -4,8 +4,8 @@ return {
     opts = {
       image = {
         -- inline = false,
-        enabled = false,
-        formats = {},
+        -- enabled = false,
+        -- formats = {},
       },
     },
   },
