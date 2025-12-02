@@ -1,7 +1,7 @@
 # Auto-generated config directories
 config/.config/*
 !config/.config/nvim/
-!config/.config/kitty/
+!config/.config/wezterm/
 !config/.config/fontconfig/
 
 # Vim/Neovim runtime files
