@@ -50,4 +50,8 @@ require("lazy").setup({
       },
     },
   },
+  -- border highlight when background is transparent
+  ui = {
+    border = "rounded",
+  },
 })

@@ -13,6 +13,12 @@ return {
       table.insert(opts.sections.lualine_x, {
         require("plugins.codecompanion.lualine-model"),
       })
+
+      table.insert(opts.sections.lualine_x, 2, {
+        function()
+          return require("config.fcitx5-cache").get_current_im()
+        end,
+      })
     end,
   },
 }
