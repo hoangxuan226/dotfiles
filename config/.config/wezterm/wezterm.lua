@@ -28,9 +28,10 @@ config.keys = {
 -- Font setting
 config.font = wezterm.font_with_fallback({
 	--"Hack Nerd Font",
-	{ family = "Inconsolata Nerd Font", weight = "Bold" },
+	"Inconsolata Nerd Font",
+	-- { family = "Inconsolata Nerd Font", weight = "Bold" },
 })
-config.font_size = 16
+config.font_size = 14
 config.line_height = 1.1
 
 -- Colors

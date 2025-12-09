@@ -1,6 +1,7 @@
 local M = {}
 
 M.closed = false
+M.cached_im = nil -- Cache for current IM state
 
 local function all_trim(s)
   return s:match("^%s*(.-)%s*$")
@@ -25,8 +26,8 @@ end
 local C = {
   default_command = { "fcitx5-remote" },
   default_method_selected = "keyboard-us",
-  set_default_events = { "InsertLeave", "CmdlineLeave" },
-  set_previous_events = { "InsertEnter" },
+  set_default_events = { "InsertLeave", "CmdlineLeave", "InsertEnter" },
+  -- set_previous_events = { "InsertEnter" },
   async_switch_im = true,
 }
 
@@ -62,25 +63,47 @@ end
 
 local function restore_default_im()
   local current = get_current_select()
+  M.cached_im = current -- Update cache
   vim.api.nvim_set_var("im_select_saved_state", current)
   if current ~= C.default_method_selected then
     vim.notify("[fcitx5] Switching to default IM: " .. C.default_method_selected, vim.log.levels.INFO)
     change_im_select(C.default_command, C.default_method_selected)
+    M.cached_im = C.default_method_selected -- Update cache after switch
   end
 end
 
-local function restore_previous_im()
-  local current = get_current_select()
-  local saved = vim.g["im_select_saved_state"]
-  if saved == nil then
-    -- No saved state yet, save current and return
-    vim.api.nvim_set_var("im_select_saved_state", current)
-    return
+-- local function restore_previous_im()
+--   local current = get_current_select()
+--   M.cached_im = current -- Update cache
+--   local saved = vim.g["im_select_saved_state"]
+--   if saved == nil then
+--     -- No saved state yet, save current and return
+--     vim.api.nvim_set_var("im_select_saved_state", current)
+--     return
+--   end
+--   if current ~= saved then
+--     vim.notify("[fcitx5] Switching to previous IM: " .. saved, vim.log.levels.INFO)
+--     change_im_select(C.default_command, saved)
+--     M.cached_im = saved -- Update cache after switch
+--   end
+-- end
+
+-- Update cache from system (for timer)
+-- local function update_im_cache()
+--   M.cached_im = get_current_select()
+-- end
+-- Function to get current IM for lualine status (from cache)
+M.get_current_im = function()
+  if not is_supported() then
+    return ""
   end
-  if current ~= saved then
-    vim.notify("[fcitx5] Switching to previous IM: " .. saved, vim.log.levels.INFO)
-    change_im_select(C.default_command, saved)
+  -- Use cached value, fallback to live query if cache is nil
+  local current = M.cached_im or get_current_select()
+  -- Only show icon if not using default keyboard
+  if current ~= C.default_method_selected then
+    return " "
   end
+  return ""
 end
 
 M.setup = function()
@@ -89,34 +112,31 @@ M.setup = function()
     return
   end
   vim.notify("[fcitx5] IM switching enabled for WSL", vim.log.levels.INFO)
+
+  -- Initialize cache
+  M.cached_im = get_current_select()
+
   -- Minimal opts handling if needed (omitted for reduction)
   -- set autocmd
   local group_id = vim.api.nvim_create_augroup("im-select", { clear = true })
-  if #C.set_previous_events > 0 then
-    vim.api.nvim_create_autocmd(C.set_previous_events, {
-      callback = restore_previous_im,
-      group = group_id,
-    })
-  end
+  -- if #C.set_previous_events > 0 then
+  --   vim.api.nvim_create_autocmd(C.set_previous_events, {
+  --     callback = restore_previous_im,
+  --     group = group_id,
+  --   })
+  -- end
   if #C.set_default_events > 0 then
     vim.api.nvim_create_autocmd(C.set_default_events, {
       callback = restore_default_im,
       group = group_id,
     })
   end
-end
 
--- Function to get current IM for lualine status
-M.get_current_im = function()
-  if not is_supported() then
-    return ""
-  end
-  local current = get_current_select()
-  -- Only show icon if not using default keyboard
-  if current ~= C.default_method_selected then
-    return " "
-  end
-  return ""
+  -- Timer to catch external IM changes (every 3 seconds)
+  -- local timer = vim.uv.new_timer()
+  -- if timer then
+  --   timer:start(3000, 3000, vim.schedule_wrap(update_im_cache))
+  -- end
 end
 
 return M

@@ -19,7 +19,10 @@ fi
 # Auto-start fcitx5 (WSL-specific)
 # wrap the call in a subshell forcing all job control output to be handled by a headless subshell
 # hide the job control output of this call
-s() { (fcitx5 --disable=wayland -rd --verbose '*'=0 &) }
+s() {
+  # pkill -f "fcitx5"  # Kill any existing fcitx5 processes
+  (fcitx5 --disable=wayland -rd --verbose '*'=0 &) 
+}
 s
 
 # oh-my-posh
