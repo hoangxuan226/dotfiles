@@ -28,6 +28,14 @@ return {
     end,
     config = function()
       require("codecompanion").setup({
+        display = {
+          chat = {
+            window = {
+              layout = "float", -- float|vertical|horizontal|buffer
+              width = 0.7,
+            },
+          },
+        },
         interactions = {
           chat = {
             adapter = {
