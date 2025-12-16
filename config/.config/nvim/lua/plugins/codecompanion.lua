@@ -1,7 +1,6 @@
 return {
   {
     "olimorris/codecompanion.nvim",
-    tag = "v17.33.0", -- Pin to this version
     dependencies = {
       {
         "j-hui/fidget.nvim",
@@ -29,7 +28,7 @@ return {
     end,
     config = function()
       require("codecompanion").setup({
-        strategies = {
+        interactions = {
           chat = {
             adapter = {
               name = "copilot",
