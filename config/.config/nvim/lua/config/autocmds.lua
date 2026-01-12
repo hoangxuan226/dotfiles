@@ -7,13 +7,12 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
-require("config.fcitx5").setup()
--- require("config.evkey")
-
 if vim.g.vscode then
   -- VSCode extension
   local vscode = require("vscode")
   vscode.notify("✅ Neovim config loaded in VSCode in WSL!")
+  -- require("config.autocmds.evkey-im-switch")
 else
   -- ordinary Neovim
+  require("config.autocmds.fcitx5-im-switch").setup()
 end

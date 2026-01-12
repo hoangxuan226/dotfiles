@@ -8,4 +8,5 @@ vim.keymap.set("n", "q", "<Nop>", { noremap = true, silent = true, desc = "Disab
 
 -- Custom keymaps
 require("config.custom-keymaps.find-directory")
-require("config.custom-keymaps.deploy-cmds")
+require("config.custom-keymaps.yank-cmds")
+require("config.custom-keymaps.dap")

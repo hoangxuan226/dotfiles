@@ -24,7 +24,7 @@ return {
       { "<leader>av", "<cmd>CodeCompanionChat Add<cr>", desc = "Add code to a chat buffer", mode = { "v" } },
     },
     init = function()
-      require("plugins.codecompanion.fidget-spinner"):init()
+      require("config.components.fidget.codecompanion-spinner"):init()
     end,
     config = function()
       require("codecompanion").setup({

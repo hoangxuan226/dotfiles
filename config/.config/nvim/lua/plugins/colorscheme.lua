@@ -1,3 +1,5 @@
+local appearance = require("config.appearance")
+
 return {
   -- #region tokyonight
   -- {
@@ -47,9 +49,9 @@ return {
     name = "catppuccin",
     opts = {
       -- flavour = "frappe",
-      transparent_background = true,
+      transparent_background = appearance.transparent_background,
       float = {
-        transparent = true, -- enable transparent floating windows
+        transparent = appearance.transparent_background, -- enable transparent floating windows
         -- solid = true, -- use solid styling for floating windows, see |winborder|
       },
       lsp_styles = {
@@ -112,44 +114,20 @@ return {
   {
     "hrsh7th/nvim-cmp",
     opts = function(_, opts)
-      opts.window = {
-        completion = {
-          border = "rounded",
-          winhighlight = "Normal:MyHighlight",
-          winblend = 0,
-        },
-        documentation = {
-          border = "rounded",
-          winhighlight = "Normal:MyHighlight",
-          winblend = 0,
-        },
-      }
+      if appearance.transparent_background then
+        opts.window = {
+          completion = {
+            border = appearance.border_style,
+            winhighlight = "Normal:MyHighlight",
+            winblend = 0,
+          },
+          documentation = {
+            border = appearance.border_style,
+            winhighlight = "Normal:MyHighlight",
+            winblend = 0,
+          },
+        }
+      end
     end,
-  },
-  {
-    "mason-org/mason.nvim",
-    opts = {
-      ui = {
-        border = "rounded",
-      },
-    },
-  },
-  {
-    "folke/noice.nvim",
-    opts = {
-      presets = {
-        lsp_doc_border = true,
-      },
-    },
-  },
-  {
-    "neovim/nvim-lspconfig",
-    opts = {
-      diagnostics = {
-        float = {
-          border = "rounded",
-        },
-      },
-    },
   },
 }
