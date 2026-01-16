@@ -1,6 +1,7 @@
 local dap_helper = require("config.dap.dotnet")
 
 local cmds = {
+  -- Project Creation
   {
     name = "Create a C# console application",
     icon = "󰌛",
@@ -12,6 +13,76 @@ local cmds = {
     icon = "󰌛",
     icon_hl = "DiagnosticOk",
     cmd = "dotnet new webapi",
+  },
+  -- {
+  --   name = "Create Blazor WebAssembly app",
+  --   icon = "󰌛",
+  --   icon_hl = "DiagnosticOk",
+  --   cmd = "dotnet new blazorwasm",
+  -- },
+  -- {
+  --   name = "Create ASP.NET MVC app",
+  --   icon = "󰌛",
+  --   icon_hl = "DiagnosticOk",
+  --   cmd = "dotnet new mvc",
+  -- },
+  -- {
+  --   name = "Create Blazor Server app",
+  --   icon = "󰌛",
+  --   icon_hl = "DiagnosticOk",
+  --   cmd = "dotnet new blazorserver",
+  -- },
+  {
+    name = "Create a class library",
+    icon = "",
+    icon_hl = "DiagnosticInfo",
+    cmd = "dotnet new classlib",
+  },
+
+  -- Test Projects
+  {
+    name = "Create xUnit test project",
+    icon = "󰇉",
+    icon_hl = "DiagnosticHint",
+    cmd = "dotnet new xunit -n <test-project-name>",
+  },
+  {
+    name = "Create NUnit test project",
+    icon = "󰇉",
+    icon_hl = "DiagnosticHint",
+    cmd = "dotnet new nunit -n <test-project-name>",
+  },
+  {
+    name = "Create MSTest test project",
+    icon = "󰇉",
+    icon_hl = "DiagnosticHint",
+    cmd = "dotnet new mstest -n <test-project-name>",
+  },
+
+  -- Solution Management
+  {
+    name = "Create a solution file",
+    icon = "",
+    icon_hl = "DiagnosticInfo",
+    cmd = "dotnet new sln",
+  },
+  {
+    name = "Add project to solution",
+    icon = "󱪝",
+    icon_hl = "DiagnosticOk",
+    cmd = "dotnet sln add <path-to-csproj>",
+  },
+  {
+    name = "Remove project from solution",
+    icon = "󱪟",
+    icon_hl = "DiagnosticWarn",
+    cmd = "dotnet sln remove <path-to-csproj>",
+  },
+  {
+    name = "List solution projects",
+    icon = "󰒺",
+    icon_hl = "DiagnosticInfo",
+    cmd = "dotnet sln list",
   },
 }
 
@@ -88,6 +159,110 @@ local function get_dynamic_build_commands()
         cmd = publish_cmd,
       })
     end
+  end
+
+  -- NuGet Package Management
+  local add_package_cmd = dap_helper.get_add_package_command()
+  if add_package_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Add NuGet package to current project",
+      icon = "󰏖",
+      icon_hl = "DiagnosticOk",
+      cmd = add_package_cmd,
+    })
+  end
+
+  local remove_package_cmd = dap_helper.get_remove_package_command()
+  if remove_package_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Remove NuGet package from current project",
+      icon = "󰆴",
+      icon_hl = "DiagnosticWarn",
+      cmd = remove_package_cmd,
+    })
+  end
+
+  local list_packages_cmd = dap_helper.get_list_packages_command()
+  if list_packages_cmd then
+    table.insert(dynamic_cmds, {
+      name = "List packages in current project",
+      icon = "󰒺",
+      icon_hl = "DiagnosticInfo",
+      cmd = list_packages_cmd,
+    })
+  end
+
+  -- Project References
+  local add_reference_cmd = dap_helper.get_add_reference_command()
+  if add_reference_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Add project reference to current project",
+      icon = "",
+      icon_hl = "DiagnosticOk",
+      cmd = add_reference_cmd,
+    })
+  end
+
+  local list_references_cmd = dap_helper.get_list_references_command()
+  if list_references_cmd then
+    table.insert(dynamic_cmds, {
+      name = "List project references",
+      icon = "󰒺",
+      icon_hl = "DiagnosticInfo",
+      cmd = list_references_cmd,
+    })
+  end
+
+  -- Watch Mode (Hot Reload)
+  -- local watch_cmd = dap_helper.get_watch_command()
+  -- if watch_cmd then
+  --   table.insert(dynamic_cmds, {
+  --     name = "Run current project with hot reload (watch)",
+  --     icon = "󰑐",
+  --     icon_hl = "DiagnosticOk",
+  --     cmd = watch_cmd,
+  --   })
+  -- end
+
+  -- Solution-level commands (only if .sln exists)
+  local sln_build_cmd = dap_helper.get_sln_build_command()
+  if sln_build_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Build entire solution",
+      icon = "",
+      icon_hl = "DiagnosticInfo",
+      cmd = sln_build_cmd,
+    })
+  end
+
+  local sln_test_cmd = dap_helper.get_sln_test_command()
+  if sln_test_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Run all tests in solution",
+      icon = "󰇉",
+      icon_hl = "DiagnosticHint",
+      cmd = sln_test_cmd,
+    })
+  end
+
+  local sln_add_cmd = dap_helper.get_sln_add_command()
+  if sln_add_cmd then
+    table.insert(dynamic_cmds, {
+      name = "Add project to solution",
+      icon = "󱪝",
+      icon_hl = "DiagnosticOk",
+      cmd = sln_add_cmd,
+    })
+  end
+
+  local sln_list_cmd = dap_helper.get_sln_list_command()
+  if sln_list_cmd then
+    table.insert(dynamic_cmds, {
+      name = "List projects in solution",
+      icon = "󰒺",
+      icon_hl = "DiagnosticInfo",
+      cmd = sln_list_cmd,
+    })
   end
 
   return dynamic_cmds

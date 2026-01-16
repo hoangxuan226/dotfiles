@@ -17,7 +17,7 @@ return {
       { "nvim-lua/plenary.nvim", branch = "master" },
     },
     keys = {
-      { "<leader>a", desc = "AI" },
+      { "<leader>a", "<Nop>", desc = "AI" },
       { "<leader>aa", "<cmd>CodeCompanionActions<cr>", desc = "Actions", mode = { "n", "v" } },
       { "<leader>ac", "<cmd>CodeCompanionChat Toggle<cr>", desc = "Toggle Chat", mode = { "n", "v" } },
       { "<leader>ai", "<cmd>CodeCompanion<cr>", desc = "Inline Chat", mode = { "n", "v" } },

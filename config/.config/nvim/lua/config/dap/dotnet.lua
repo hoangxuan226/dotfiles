@@ -415,4 +415,119 @@ function M.get_publish_command()
   return "dotnet publish " .. vim.fn.shellescape(metadata.project_root) .. " --configuration Release"
 end
 
+-- Generate add package command with parameter placeholder
+function M.get_add_package_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet add " .. vim.fn.shellescape(metadata.project_root) .. " package <package-name>"
+end
+
+-- Generate remove package command with parameter placeholder
+function M.get_remove_package_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet remove " .. vim.fn.shellescape(metadata.project_root) .. " package <package-name>"
+end
+
+-- Generate list packages command
+function M.get_list_packages_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet list " .. vim.fn.shellescape(metadata.project_root) .. " package"
+end
+
+-- Generate add project reference command with parameter placeholder
+function M.get_add_reference_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet add " .. vim.fn.shellescape(metadata.project_root) .. " reference <path-to-csproj>"
+end
+
+-- Generate list references command
+function M.get_list_references_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet list " .. vim.fn.shellescape(metadata.project_root) .. " reference"
+end
+
+-- Generate watch command (for hot reload)
+function M.get_watch_command()
+  local metadata = get_project_metadata()
+  if not metadata then
+    return nil
+  end
+  return "dotnet watch --project " .. vim.fn.shellescape(metadata.project_root)
+end
+
+-- Find .sln file in current directory or parent directories
+local function find_solution_file(start_path)
+  local Path = require("plenary.path")
+  local path = Path:new(start_path)
+
+  while true do
+    local sln_files = vim.fn.glob(path:absolute() .. "/*.sln", false, true)
+    if #sln_files > 0 then
+      return sln_files[1]
+    end
+
+    local parent = path:parent()
+    if parent:absolute() == path:absolute() then
+      return nil
+    end
+
+    path = parent
+  end
+end
+
+-- Generate solution-related commands (dynamic if .sln exists)
+function M.get_sln_add_command()
+  local _, current_dir = get_current_context()
+  local sln_file = find_solution_file(current_dir)
+
+  if sln_file then
+    return "dotnet sln " .. vim.fn.shellescape(sln_file) .. " add <path-to-csproj>"
+  end
+  return nil
+end
+
+function M.get_sln_list_command()
+  local _, current_dir = get_current_context()
+  local sln_file = find_solution_file(current_dir)
+
+  if sln_file then
+    return "dotnet sln " .. vim.fn.shellescape(sln_file) .. " list"
+  end
+  return nil
+end
+
+function M.get_sln_build_command()
+  local _, current_dir = get_current_context()
+  local sln_file = find_solution_file(current_dir)
+
+  if sln_file then
+    return "dotnet build " .. vim.fn.shellescape(sln_file)
+  end
+  return nil
+end
+
+function M.get_sln_test_command()
+  local _, current_dir = get_current_context()
+  local sln_file = find_solution_file(current_dir)
+
+  if sln_file then
+    return "dotnet test " .. vim.fn.shellescape(sln_file)
+  end
+  return nil
+end
+
 return M
