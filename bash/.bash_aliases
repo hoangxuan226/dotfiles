@@ -24,3 +24,9 @@ extract() {
 # ======== HSMS
 # Alias for opening Neovim with minimal configuration
 alias nvimm='nvim -u ~/.config/nvim/minimal.lua'
+
+# Alias for manual click hide decorations
+alias hidedecor='xprop -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "2, 0, 0, 0, 0"'
+
+# Alias for manual click show decorations
+alias showdecor='xprop -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "0, 0, 0, 0, 0"'
