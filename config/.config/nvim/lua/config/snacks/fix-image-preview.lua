@@ -152,6 +152,7 @@ return function()
       --   C=1      : cursor movement policy (do not move cursor after image)
       --   c        : columns (image width in character cells)
       --   r        : rows (image height in character cells)
+      --   z=-1     : z-index (stacking order of kitty protocol, < 0 means below text)
       --   cursor_pos: {row, col} triggers atomic cursor+image write
       terminal.request({
         a = "p",
@@ -160,6 +161,7 @@ return function()
         C = 1,
         c = state.loc.width,
         r = state.loc.height,
+        z = -1,
         cursor_pos = cursor_pos, -- KEY: Enables atomic rendering
       })
     end

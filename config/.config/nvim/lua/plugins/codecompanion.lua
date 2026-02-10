@@ -42,17 +42,38 @@ return {
               name = "copilot",
               model = "claude-sonnet-4.5",
             },
+            tools = {
+              opts = {
+                default_tools = { "full_stack_dev", "cmd_runner", "fetch_webpage" },
+              },
+              -- Disable approval for read-only tools
+              ["read_file"] = {
+                opts = { require_approval_before = false },
+              },
+              ["file_search"] = {
+                opts = { require_approval_before = false },
+              },
+              ["grep_search"] = {
+                opts = { require_approval_before = false },
+              },
+              ["list_code_usages"] = {
+                opts = { require_approval_before = false },
+              },
+              ["get_changed_files"] = {
+                opts = { require_approval_before = false },
+              },
+            },
           },
           inline = {
             adapter = {
               name = "copilot",
-              model = "gpt-4o",
+              model = "claude-sonnet-4.5",
             },
           },
           cmd = {
             adapter = {
               name = "copilot",
-              model = "gpt-4o",
+              model = "claude-sonnet-4.5",
             },
           },
         },
