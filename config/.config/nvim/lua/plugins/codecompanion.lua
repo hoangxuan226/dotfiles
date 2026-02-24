@@ -40,7 +40,7 @@ return {
           chat = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.5",
+              model = "claude-sonnet-4.6",
             },
             tools = {
               opts = {
@@ -67,13 +67,13 @@ return {
           inline = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.5",
+              model = "claude-sonnet-4.6",
             },
           },
           cmd = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.5",
+              model = "claude-sonnet-4.6",
             },
           },
         },

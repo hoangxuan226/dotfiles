@@ -82,7 +82,8 @@ config.keys = {
 config.font = wezterm.font_with_fallback({
 	--"Hack Nerd Font",
 	-- "Inconsolata Nerd Font",
-	"JetBrainsMono Nerd Font",
+	-- "JetBrainsMono Nerd Font",
+	"JetBrainsMonoNL Nerd Font", -- the "NL" stands for **No Ligatures**, won't auto-convert `>=` into a single glyph
 	-- { family = "Inconsolata Nerd Font", weight = "Bold" },
 })
 -- config.font_size = 14

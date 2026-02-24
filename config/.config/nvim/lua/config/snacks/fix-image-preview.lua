@@ -42,6 +42,15 @@
 --   ✓ Works correctly in WezTerm/WSL/tmux environments
 --   ✓ Image renders at the correct calculated position
 --
+-- ADDITIONAL FIX: tmux pane offset
+-- nvim_win_get_position() returns coordinates within Neovim's editor grid
+-- (0-indexed from the top-left of the Neovim UI), but terminal cursor escape
+-- sequences (ESC[row;colH) address the FULL terminal screen.
+-- In tmux, the Neovim pane may not start at screen (0,0) — for example,
+-- in a vertical split the right pane starts at column N, not column 0.
+-- Without accounting for this, images always render at the wrong column.
+-- Fix: query tmux for #{pane_top} and #{pane_left} and add them to cursor_pos.
+--
 -- USAGE:
 --   require("config.snacks.fix-image-preview")()
 --------------------------------------------------------------------------------
@@ -49,6 +58,42 @@
 return function()
   local terminal = require("snacks.image.terminal")
   local Placement = require("snacks.image.placement")
+
+  -- ============================================================================
+  -- HELPER: Get tmux pane offset (cached)
+  -- ============================================================================
+  -- In tmux, Neovim runs inside a pane whose top-left corner can be anywhere
+  -- on the terminal screen (e.g. the right pane of a vertical split starts at
+  -- column N). nvim_win_get_position() returns coordinates relative to Neovim's
+  -- own editor grid, not the terminal screen. Since terminal cursor escape
+  -- sequences use full screen coordinates, we must add the pane's offset.
+  --
+  -- We query tmux once and cache the result — the offset doesn't change while
+  -- Neovim is running in the same pane.
+  --
+  -- Example: Neovim window at editor pos {0, 0} inside a right pane at col 82
+  --   Without offset: ESC[1;1H  → image appears at top-left of screen  (wrong)
+  --   With offset:    ESC[1;83H → image appears at top-left of the pane (correct)
+  -- ============================================================================
+  local _pane_offset = nil ---@type {[1]: number, [2]: number}?
+  local function get_pane_offset()
+    if _pane_offset then
+      return _pane_offset
+    end
+    _pane_offset = { 0, 0 } -- default: no offset when not in tmux
+    if vim.env.TMUX then
+      -- #{pane_top} and #{pane_left} are the 0-based row/col of the pane's
+      -- top-left corner on the full terminal screen
+      local ok, out = pcall(vim.fn.system, { "tmux", "display-message", "-p", "#{pane_top},#{pane_left}" })
+      if ok and out then
+        local row, col = out:match("^(%d+),(%d+)")
+        if row and col then
+          _pane_offset = { tonumber(row), tonumber(col) }
+        end
+      end
+    end
+    return _pane_offset
+  end
 
   -- ============================================================================
   -- PATCH 1: Override terminal.request() to support atomic operations
@@ -98,7 +143,7 @@ return function()
   end
 
   -- ============================================================================
-  -- PATCH 2: Override render_fallback() to use single write operation
+  -- PATCH 2: Override render_fallback() to use single atomic write operation
   -- ============================================================================
   -- Modifies render_fallback() to calculate cursor position but NOT call
   -- terminal.set_cursor() separately. Instead, passes cursor_pos to
@@ -110,7 +155,7 @@ return function()
   --   3. terminal.request({...})          ← Write #2 (separate!)
   --
   -- Fixed flow:
-  --   1. Calculate cursor_pos
+  --   1. Calculate cursor_pos (with tmux pane offset applied)
   --   2. terminal.request({..., cursor_pos=cursor_pos})  ← Single write
   --
   -- This eliminates issues where two separate writes don't coordinate
@@ -126,34 +171,37 @@ return function()
       local border = setmetatable({ opts = vim.api.nvim_win_get_config(win) }, { __index = Snacks.win }):border_size()
       local pos = vim.api.nvim_win_get_position(win)
 
-      -- Calculate cursor position based on window position and borders
-      -- This accounts for:
-      --   - Window position in the editor (pos)
-      --   - Border offsets (border.top, border.left)
-      --   - Tab line offset when applicable
-      -- Note: We DON'T call terminal.set_cursor() here anymore
+      -- Calculate cursor position in full terminal screen coordinates.
+      -- Components:
+      --   pane_offset : tmux pane's top-left on the terminal screen (0-based)
+      --   pos         : Neovim window's top-left within the editor grid (0-based)
+      --   border.*    : border thickness offsets
+      --   +1 row      : terminal cursor is 1-based; also accounts for tabline
+      -- Note: We DON'T call terminal.set_cursor() here anymore — cursor movement
+      -- is bundled into terminal.request() via cursor_pos for atomic delivery.
+      local pane_offset = get_pane_offset()
       local cursor_pos
       if
         (Snacks.config.styles.snacks_image.relative ~= "editor")
         and ((vim.o.showtabline == 2) or (vim.o.showtabline == 1 and vim.fn.tabpagenr("$") > 1))
       then
-        -- Custom: Add 1 extra row to move image preview down for personal config
-        cursor_pos = { pos[1] + border.top + 1, pos[2] + border.left }
+        -- Custom: Add 2 extra row to move image preview down for personal config
+        cursor_pos = { pane_offset[1] + pos[1] + border.top + 2, pane_offset[2] + pos[2] + border.left }
       else
-        cursor_pos = { pos[1] + 1 + border.top, pos[2] + border.left }
+        cursor_pos = { pane_offset[1] + pos[1] + 2 + border.top, pane_offset[2] + pos[2] + border.left }
       end
 
-      -- Send image request with cursor position for atomic rendering
-      -- The cursor_pos parameter triggers PATCH 1's atomic write logic
+      -- Send image request with cursor position for atomic rendering.
+      -- The cursor_pos parameter triggers PATCH 1's atomic write logic.
       -- Parameters:
-      --   a="p"    : action = put/display image
-      --   i        : image ID (from loaded image)
-      --   p        : placement ID (unique per image instance)
-      --   C=1      : cursor movement policy (do not move cursor after image)
-      --   c        : columns (image width in character cells)
-      --   r        : rows (image height in character cells)
-      --   z=-1     : z-index (stacking order of kitty protocol, < 0 means below text)
-      --   cursor_pos: {row, col} triggers atomic cursor+image write
+      --   a="p"      : action = put/display image
+      --   i          : image ID (from loaded image)
+      --   p          : placement ID (unique per image instance)
+      --   C=1        : cursor movement policy (do not move cursor after image)
+      --   c          : columns (image width in character cells)
+      --   r          : rows (image height in character cells)
+      --   z=-1       : z-index (< 0 means render below text)
+      --   cursor_pos : {row, col} in screen coords — triggers atomic write
       terminal.request({
         a = "p",
         i = self.img.id,
@@ -162,7 +210,7 @@ return function()
         c = state.loc.width,
         r = state.loc.height,
         z = -1,
-        cursor_pos = cursor_pos, -- KEY: Enables atomic rendering
+        cursor_pos = cursor_pos, -- KEY: Enables atomic cursor+image rendering
       })
     end
   end

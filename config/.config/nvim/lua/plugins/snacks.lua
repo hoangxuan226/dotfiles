@@ -7,6 +7,7 @@ return {
       -- Apply image rendering fixes
       require("config.snacks.fix-image-preview")()
       require("config.snacks.fix-picker-ghost-image")()
+      require("config.snacks.improve-image-cpu")()
     end,
     opts = {
       dashboard = {
