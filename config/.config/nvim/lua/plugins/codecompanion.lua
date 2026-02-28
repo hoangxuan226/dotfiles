@@ -77,6 +77,34 @@ return {
             },
           },
         },
+        rules = {
+          default = {
+            files = { ".codecompanionrules/*" },
+          },
+        },
+        opts = {
+          per_project_config = {
+            -- Files in the cwd that contain project configuration
+            -- Example of per_project_config '.codecompanion.lua' file:
+            -- return {
+            --   interactions = {
+            --     chat = {
+            --       adapter = {
+            --         name = "copilot",
+            --         model = "claude-opus-4.6",
+            --       },
+            --     },
+            --   },
+            --   rules = {
+            --     default = {
+            --       files = { "test.md", ".rules/*" },
+            --     },
+            --   },
+            -- }
+            files = { ".codecompanion.lua" },
+            -- paths = {}, -- Per-path config: { ["~/Code/myproject"] = { ... } }
+          },
+        },
         extensions = {
           history = {
             enabled = true,
