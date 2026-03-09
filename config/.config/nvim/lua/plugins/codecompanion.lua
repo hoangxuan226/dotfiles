@@ -44,7 +44,7 @@ return {
             },
             tools = {
               opts = {
-                default_tools = { "full_stack_dev", "cmd_runner", "fetch_webpage" },
+                default_tools = { "agent", "fetch_webpage" },
               },
               -- Disable approval for read-only tools
               ["read_file"] = {

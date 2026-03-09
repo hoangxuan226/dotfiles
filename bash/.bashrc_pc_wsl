@@ -16,14 +16,16 @@ export NVM_DIR="$HOME/.nvm"
 if [ -f ~/.bash_fcitx ]; then
   source ~/.bash_fcitx
 fi
-# Auto-start fcitx5 (WSL-specific)
+# Auto-start fcitx5 (WSL-specific) in wezterm only
 # wrap the call in a subshell forcing all job control output to be handled by a headless subshell
 # hide the job control output of this call
-s() {
-  # pkill -f "fcitx5"  # Kill any existing fcitx5 processes
-  (fcitx5 --disable=wayland -rd --verbose '*'=0 &) 
-}
-s
+if [[ -n "$WEZTERM_EXECUTABLE" ]]; then
+  s() {
+    # pkill -f "fcitx5"  # Kill any existing fcitx5 processes
+    (fcitx5 --disable=wayland -rd --verbose '*'=0 &) 
+  }
+  s
+fi
 
 # oh-my-posh
 # use which oh-my-posh to find the installation path
