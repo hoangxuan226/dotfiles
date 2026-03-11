@@ -14,5 +14,14 @@ if vim.g.vscode then
   -- require("config.autocmds.evkey-im-switch")
 else
   -- ordinary Neovim
+  -- vim.cmd.colorscheme("catppuccin-latte")
   require("config.autocmds.fcitx5-im-switch").setup()
+
+  -- Disable spell checking for Markdown
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "markdown" },
+    callback = function()
+      vim.opt_local.spell = false
+    end,
+  })
 end
