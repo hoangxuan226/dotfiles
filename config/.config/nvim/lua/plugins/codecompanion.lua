@@ -22,11 +22,25 @@ return {
       { "<leader>ac", "<cmd>CodeCompanionChat Toggle<cr>", desc = "Toggle Chat", mode = { "n", "v" } },
       { "<leader>ai", "<cmd>CodeCompanion<cr>", desc = "Inline Chat", mode = { "n", "v" } },
       { "<leader>av", "<cmd>CodeCompanionChat Add<cr>", desc = "Add code to a chat buffer", mode = { "v" } },
+      {
+        "<leader>aq",
+        function()
+          require("config.codecompanion.quick-model").open({
+            "copilot:gpt-5-mini",
+            "copilot:gemini-3.1-pro-preview",
+          })
+        end,
+        desc = "Quick chat presets",
+        mode = { "n" },
+      },
     },
     init = function()
       require("config.components.fidget.codecompanion-spinner"):init()
     end,
     config = function()
+      -- Apply monkey-patch to fix model not being restored correctly from chat history
+      require("config.codecompanion.history.fix-history-model-restore")()
+
       require("codecompanion").setup({
         -- display = {
         --   chat = {
@@ -40,7 +54,7 @@ return {
           chat = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.6",
+              model = "gemini-3.1-pro-preview",
             },
             tools = {
               opts = {
@@ -62,18 +76,33 @@ return {
               ["get_changed_files"] = {
                 opts = { require_approval_before = false },
               },
+              ["run_command"] = {
+                opts = { allowed_in_yolo_mode = true },
+              },
             },
+            -- keymaps = {
+            --   my_custom_action = {
+            --     description = "My custom action (example)",
+            --     modes = { n = "gm" }, -- Normal mode: gm
+            --     callback = function(chat)
+            --       -- chat là đối tượng CodeCompanion.Chat
+            --       -- require("codecompanion.interactions.chat").last_chat():change_model({ model = "gpt-5-mini" })
+            --       vim.notify("Custom action triggered for chat: " .. tostring(chat.id))
+            --       -- hoặc gọi module riêng: require("my_module").do_something(chat)
+            --     end,
+            --   },
+            -- },
           },
           inline = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.6",
+              model = "gemini-3.1-pro-preview",
             },
           },
           cmd = {
             adapter = {
               name = "copilot",
-              model = "claude-sonnet-4.6",
+              model = "gemini-3.1-pro-preview",
             },
           },
         },
@@ -133,7 +162,7 @@ return {
                 ---Adapter for generating titles (defaults to current chat adapter)
                 adapter = "copilot", -- "copilot"
                 ---Model for generating titles (defaults to current chat model)
-                model = "gpt-4o", -- "gpt-4o"
+                model = "gpt-5-mini", -- "gpt-4o"
                 ---Number of user prompts after which to refresh the title (0 to disable)
                 refresh_every_n_prompts = 0, -- e.g., 3 to refresh after every 3rd user prompt
                 ---Maximum number of times to refresh the title (default: 3)
@@ -161,8 +190,8 @@ return {
                 browse_summaries_keymap = "gbs",
 
                 generation_opts = {
-                  adapter = "copilot", -- defaults to current chat adapter
-                  model = "gpt-4o", -- defaults to current chat model
+                  adapter = nil, -- defaults to current chat adapter
+                  model = nil, -- defaults to current chat model
                   context_size = 90000, -- max tokens that the model supports
                   include_references = true, -- include slash command content
                   include_tool_outputs = true, -- include tool execution results
