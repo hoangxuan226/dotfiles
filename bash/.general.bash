@@ -4,17 +4,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
-# for using NVIDIA GPU acceleration
-# export MESA_D3D12_DEFAULT_ADAPTER_NAME=AMD
-# export GALLIUM_DRIVER=d3d12
-
-# Add cuda to PATH and LD_LIBRARY_PATH
-# export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
-# export LD_LIBRARY_PATH=/usr/local/cuda/lib64\${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-
 # fcitx
-if [ -f ~/.bash_fcitx ]; then
-  source ~/.bash_fcitx
+if [ -f ~/.fcitx.bash ]; then
+  source ~/.fcitx.bash
 fi
 # Auto-start fcitx5 (WSL-specific) in wezterm only
 # wrap the call in a subshell forcing all job control output to be handled by a headless subshell
@@ -22,7 +14,7 @@ fi
 if [[ -n "$WEZTERM_EXECUTABLE" ]]; then
   s() {
     # pkill -f "fcitx5"  # Kill any existing fcitx5 processes
-    (fcitx5 --disable=wayland -rd --verbose '*'=0 &) 
+    (fcitx5 --disable=wayland -rd --verbose '*'=0 &)
   }
   s
 fi
@@ -30,7 +22,6 @@ fi
 # oh-my-posh
 # use which oh-my-posh to find the installation path
 export PATH="$HOME/.local/bin:$PATH"
-if [ -f ~/.bash_oh_my_posh ]; then
-  source ~/.bash_oh_my_posh
+if [ -f ~/.oh_my_posh.bash ]; then
+  source ~/.oh_my_posh.bash
 fi
-

@@ -10,3 +10,6 @@ config/.config/*
 *.swo
 *~
 .DS_Store
+
+# Bash
+bash/.local.bash

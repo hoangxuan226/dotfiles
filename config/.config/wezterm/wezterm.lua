@@ -84,9 +84,12 @@ config.font = wezterm.font_with_fallback({
 	-- "Inconsolata Nerd Font",
 	-- "JetBrainsMono Nerd Font",
 	"JetBrainsMonoNL Nerd Font", -- the "NL" stands for **No Ligatures**, won't auto-convert `>=` into a single glyph
+	"Segoe UI Symbol",
+	"Noto Color Emoji",
 	-- { family = "Inconsolata Nerd Font", weight = "Bold" },
 })
 -- config.font_size = 14
+config.font_size = 10
 -- config.line_height = 1.1
 
 -- Colors
