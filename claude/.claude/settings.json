@@ -3,5 +3,10 @@
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 0
+  },
+  "env": {
+    "_cmt": "https://unsloth.ai/docs/basics/claude-code#fixing-90-slower-inference-in-claude-code",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
   }
 }

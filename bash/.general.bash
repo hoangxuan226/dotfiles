@@ -25,3 +25,11 @@ export PATH="$HOME/.local/bin:$PATH"
 if [ -f ~/.oh_my_posh.bash ]; then
   source ~/.oh_my_posh.bash
 fi
+
+# for using NVIDIA GPU acceleration
+# export MESA_D3D12_DEFAULT_ADAPTER_NAME=AMD
+# export GALLIUM_DRIVER=d3d12
+
+# Add cuda to PATH and LD_LIBRARY_PATH
+# export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
+# export LD_LIBRARY_PATH=/usr/local/cuda/lib64\${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
