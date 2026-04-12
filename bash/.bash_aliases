@@ -1,9 +1,9 @@
 # custom bash
-if [ -f ~/.general.bash ]; then
-  . ~/.general.bash
+if [ -f ~/.bash.d/general ]; then
+  source ~/.bash.d/general
 fi
-if [ -f ~/.local.bash ]; then
-  . ~/.local.bash
+if [ -f ~/.bash.d/local ]; then
+  source ~/.bash.d/local
 fi
 
 # extract file

@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+
+# Alias for opening Neovim with minimal configuration
+alias nvimm='nvim -u ~/.config/nvim/minimal.lua'

@@ -1,15 +1,9 @@
-# Auto-generated config directories
-config/.config/*
-!config/.config/nvim/
-!config/.config/wezterm/
-!config/.config/fontconfig/
-!config/.config/tmux/tmux.conf
-
 # Vim/Neovim runtime files
 *.swp
 *.swo
+*.log
 *~
 .DS_Store
 
 # Bash
-bash/.local.bash
+/bash/bash.d/local
