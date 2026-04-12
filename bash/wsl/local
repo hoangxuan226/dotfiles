@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+# to build apk local
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export ANDROID_HOME=$HOME/android-sdk
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+# Claude Code + local LLM (llama.cpp)
+# In WSL, for Claude CLI to using local LLM run in native Windows
+# 1.  point to Windows host's IP address instead of localhost:
+#     export WIN_HOST_IP=$(ip route show | grep -i default | awk '{ print $3}')
+#     export ANTHROPIC_BASE_URL="http://$WIN_HOST_IP:8080"
+# or
+# 2.  set networkingMode=mirrored under [wsl2] in the .wslconfig file to enable mirrored mode networking
+#     export ANTHROPIC_BASE_URL="http://localhost:8080"
+# -----------
+# check if qwen starting script exists
+llm_qwen_script="/mnt/c/Users/ADmin/Desktop/localAI/qwen35-35b-a3b.sh"
+if [ -f "$llm_qwen_script" ]; then
+  HOST="http://127.0.0.1:8080"
+
+  # alias to execute script
+  alias llama-qwen='$llm_qwen_script'
+
+  # alias to start default model (qwen)
+  llama-start() {
+    local SESSION_NAME="llama-server"
+
+    echo "Checking llama-server at ${HOST}..."
+
+    # Check if the server is running
+    if ! curl -s --head --max-time 2 "${HOST}/health" >/dev/null 2>&1; then
+      # If a tmux session exists but the server isn't running, kill it
+      if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        tmux kill-session -t "$SESSION_NAME"
+      fi
+
+      # Start llama-server
+      echo "⏳ Starting llama-server in tmux session '${SESSION_NAME}'..."
+      tmux new -d -s "$SESSION_NAME" "${llm_qwen_script} -m server -p think-code -x"
+
+      local max_wait=60
+      local elapsed=4
+      sleep $elapsed
+
+      while ! curl -s --head --max-time 1 "${HOST}/health" >/dev/null 2>&1; do
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo -n "."
+
+        if [ "$elapsed" -ge "$max_wait" ]; then
+          echo -e "\n❌ Timeout reached (${max_wait}s) while waiting for the llama-server."
+          echo "Please check the tmux session with: tmux attach -t ${SESSION_NAME}"
+          return 1
+        fi
+      done
+      echo -e "\n✅ llama-server is now up and ready!"
+    else
+      echo "✅ llama-server is already running!"
+    fi
+
+    return 0
+  }
+
+  claude-local() {
+    if ! llama-start; then
+      return 1
+    fi
+
+    # Set required environment variables
+    export ANTHROPIC_BASE_URL="$HOST"
+    export ANTHROPIC_API_KEY='sk-no-key-required'
+    export CLAUDE_CODE_AUTO_COMPACT_WINDOW=65536
+    export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50
+
+    # Run Claude Code
+    claude --model think-code "$@"
+  }
+fi
+
+# to using wezterm portable on Windows
+alias weztermw=/mnt/c/Users/ADmin/Desktop/WezTerm-portable/wezterm.exe

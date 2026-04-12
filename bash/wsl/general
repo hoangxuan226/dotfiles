@@ -27,9 +27,7 @@ fi
 # oh-my-posh
 # use which oh-my-posh to find the installation path
 export PATH="$HOME/.local/bin:$PATH"
-if [ -f ~/.bash.d/oh_my_posh ]; then
-  source ~/.bash.d/oh_my_posh
-fi
+[ -f "$DOTFILES/bash/wsl/oh_my_posh" ] && source "$DOTFILES/bash/wsl/oh_my_posh"
 
 # for using NVIDIA GPU acceleration
 # export MESA_D3D12_DEFAULT_ADAPTER_NAME=AMD

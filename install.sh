@@ -23,7 +23,7 @@ echo "-> General done!"
 
 # ── macOS ──────────────────────────────────────────────
 if [[ "$OS" == "Darwin" ]]; then
-  echo "-> zsh"
+  echo "-> For zsh:"
   # zsh
   link zsh/.zshrc .zshrc
   link zsh/.zsh_aliases .zsh_aliases
@@ -33,16 +33,14 @@ if [[ "$OS" == "Darwin" ]]; then
 
 # ── Linux ──────────────────────────────────────────────
 elif [[ "$OS" == "Linux" ]]; then
-  echo "-> bash"
+  echo "-> For linux:"
   # bash
-  link bash/bash.d .bash.d
+  link bash/.bashenv .bashenv
   link bash/.bash_aliases .bash_aliases
 
-  # oh-my-posh
-  link themes/oh_my_posh oh-my-posh-themes
-
   # claude
-  link claude .claude
+  link claude/settings.json .claude/settings.json
+  link claude/statusline.sh .claude/statusline.sh
 
   # fonts
   link config/fontconfig/fonts.conf .config/fontconfig/fonts.conf
