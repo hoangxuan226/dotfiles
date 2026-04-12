@@ -10,12 +10,12 @@
 if vim.g.vscode then
   -- VSCode extension
   local vscode = require("vscode")
-  vscode.notify("✅ Neovim config loaded in VSCode in WSL!")
-  -- require("config.autocmds.evkey-im-switch")
+  vscode.notify("✅ Neovim config loaded in VSCode!")
 else
   -- ordinary Neovim
-  -- vim.cmd.colorscheme("catppuccin-latte")
-  require("config.autocmds.fcitx5-im-switch").setup()
+  if vim.fn.has("wsl") == 1 then
+    require("config.autocmds.fcitx5-im-switch").setup()
+  end
 
   -- Disable spell checking for Markdown
   vim.api.nvim_create_autocmd("FileType", {

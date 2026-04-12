@@ -1,9 +1,9 @@
-# custom bash
-if [ -f ~/.general.bash ]; then
-  . ~/.general.bash
-fi
-if [ -f ~/.local.bash ]; then
-  . ~/.local.bash
+if [ -f ~/.bashenv ]; then
+  # set env
+  source ~/.bashenv
+
+  [ -f "$DOTFILES/bash/wsl/general" ] && source "$DOTFILES/bash/wsl/general"
+  [ -f "$DOTFILES/bash/wsl/local" ] && source "$DOTFILES/bash/wsl/local"
 fi
 
 # extract file

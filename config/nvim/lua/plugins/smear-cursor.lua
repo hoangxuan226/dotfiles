@@ -1,9 +1,11 @@
+local is_wsl = vim.fn.has("wsl") == 1
+
 return {
   "sphamba/smear-cursor.nvim",
   event = "VeryLazy",
   cond = vim.g.neovide == nil,
   opts = {
-    hide_target_hack = true,
+    hide_target_hack = is_wsl,
     -- never_draw_over_target = true,
     -- transparent_bg_fallback_color = "#303030",
     -- stiffness = 0.8, -- 0.6      [0, 1]
@@ -20,7 +22,7 @@ return {
       "nvim-mini/mini.animate",
       optional = true,
       opts = {
-        cursor = { enable = false },
+        cursor = { enable = not is_wsl },
       },
     },
   },

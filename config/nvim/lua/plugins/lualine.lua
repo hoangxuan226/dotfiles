@@ -1,3 +1,5 @@
+local is_wsl = vim.fn.has("wsl") == 1
+
 return {
   {
     "nvim-lualine/lualine.nvim",
@@ -21,16 +23,18 @@ return {
       --   end,
       -- })
 
-      -- Battery status
-      table.insert(opts.sections.lualine_x, 3, {
-        function()
-          return require("config.components.lualine.battery").get_battery_status()
-        end,
-        cond = function()
-          -- Only show if battery file exists
-          return vim.fn.filereadable("/sys/class/power_supply/BAT1/capacity") == 1
-        end,
-      })
+      -- Battery status in wsl
+      if is_wsl then
+        table.insert(opts.sections.lualine_x, 3, {
+          function()
+            return require("config.components.lualine.battery").get_battery_status()
+          end,
+          cond = function()
+            -- Only show if battery file exists
+            return vim.fn.filereadable("/sys/class/power_supply/BAT1/capacity") == 1
+          end,
+        })
+      end
     end,
   },
 }

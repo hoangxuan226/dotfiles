@@ -45,8 +45,8 @@ return {
   -- #region catppuccin
   {
     "catppuccin/nvim",
-    lazy = true,
     name = "catppuccin",
+    priority = 1000,
     opts = {
       -- flavour = "frappe",
       transparent_background = appearance.transparent_background,
@@ -100,6 +100,10 @@ return {
         end,
       },
     },
+    config = function(_, opts)
+      require("catppuccin").setup(opts)
+      vim.cmd.colorscheme("catppuccin")
+    end,
   },
   -- #endregion catppuccin
 

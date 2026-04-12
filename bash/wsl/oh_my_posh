@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+OMP_THEME="${DOTFILES}/themes/oh-my-posh/json_custom.omp.json"
+
+[ -f "$OMP_THEME" ] && eval "$(oh-my-posh init bash --config "$OMP_THEME")"

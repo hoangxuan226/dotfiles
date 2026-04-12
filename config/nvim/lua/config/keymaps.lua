@@ -3,7 +3,7 @@
 -- Add any additional keymaps here
 vim.keymap.set("n", "<leader>0", Snacks.dashboard.open, { desc = "Open mini starter" })
 
--- Disable keymaps
+-- Disable macro
 vim.keymap.set("n", "q", "<Nop>", { noremap = true, silent = true, desc = "Disable macro recording in register q" })
 
 -- Custom keymaps
