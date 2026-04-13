@@ -17,9 +17,10 @@ else
     require("config.autocmds.fcitx5-im-switch").setup()
   end
 
-  -- Disable spell checking for Markdown
+  -- Disable spell checking
   vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "markdown" },
+    -- pattern = { "markdown" },
+    pattern = "*",
     callback = function()
       vim.opt_local.spell = false
     end,
