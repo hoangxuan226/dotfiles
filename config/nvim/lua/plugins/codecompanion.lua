@@ -38,18 +38,11 @@ return {
       require("config.components.fidget.codecompanion-spinner"):init()
     end,
     config = function()
-      -- Apply monkey-patch to fix model not being restored correctly from chat history
-      require("config.codecompanion.history.fix-history-model-restore")()
+      -- Apply monkey-patch
+      require("config.codecompanion.history.patch-history-model-restore")() -- patch model not being restored correctly from chat history
+      require("config.codecompanion.patch-gpt5-mini")() -- patch using gpt-5 mini and clearing stale param values
 
       require("codecompanion").setup({
-        -- display = {
-        --   chat = {
-        --     window = {
-        --       layout = "float", -- float|vertical|horizontal|buffer
-        --       width = 0.7,
-        --     },
-        --   },
-        -- },
         interactions = {
           chat = {
             adapter = {
@@ -77,7 +70,30 @@ return {
                 opts = { require_approval_before = false },
               },
               ["run_command"] = {
-                opts = { allowed_in_yolo_mode = true },
+                opts = {
+                  allowed_in_yolo_mode = true,
+                  require_approval_before = function(tool, _)
+                    local cmd = tool.args.cmd or ""
+                    local safe_prefixes = {
+                      "cat ",
+                      "grep ",
+                      "ls ",
+                      "sed -n ", -- Pattern matching print only
+                      "find ",
+                      "pwd",
+                    }
+
+                    -- If the command matches a safe prefix, auto-approve it (return false)
+                    for _, prefix in ipairs(safe_prefixes) do
+                      if cmd:sub(1, #prefix) == prefix then
+                        return false
+                      end
+                    end
+
+                    -- Otherwise, require explicit manual approval (return true)
+                    return true
+                  end,
+                },
               },
             },
             -- keymaps = {

@@ -7,6 +7,7 @@ return {
       -- Server configuration
       opts.servers = opts.servers or {}
       opts.servers.omnisharp = { enabled = false }
+      opts.servers.rust_analyzer = { mason = false }
 
       -- Diagnostic UI configuration
       if appearance.border_style then

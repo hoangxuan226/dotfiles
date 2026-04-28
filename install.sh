@@ -31,6 +31,11 @@ if [[ "$OS" == "Darwin" ]]; then
   # kitty
   link config/kitty .config/kitty
 
+  # hammerspoon
+  link hammerspoon/init.lua .hammerspoon/init.lua
+  link hammerspoon/vim-in-place.lua .hammerspoon/vim-in-place.lua
+  link hammerspoon/vim-overlay.lua .hammerspoon/vim-overlay.lua
+
 # ── Linux ──────────────────────────────────────────────
 elif [[ "$OS" == "Linux" ]]; then
   echo "-> For linux:"

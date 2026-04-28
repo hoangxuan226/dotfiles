@@ -2,3 +2,20 @@
 
 # Alias for opening Neovim with minimal configuration
 alias nvimm='nvim -u ~/.config/nvim/minimal.lua'
+
+# Kill Neovim processes
+alias nvimkill='pkill -9 nvim'
+
+# Check for running Neovim/Node processes
+alias nvimps="ps aux | grep -E 'nvim|node' | grep -v grep"
+
+# Search for processes matching any of the provided patterns.
+# Usage: psaux pattern1 pattern2 ...
+# Example: psaux nvim node
+# - Combines all arguments into a single regex pattern separated by '|'.
+# - Filters the output of 'ps aux' to show only matching processes.
+# - Excludes the 'grep' process itself from the results.
+psaux() {
+    local IFS="|"
+    ps aux | grep -E "$*" | grep -v grep
+}

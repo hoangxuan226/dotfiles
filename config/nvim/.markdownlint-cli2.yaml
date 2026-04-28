@@ -2,3 +2,4 @@
 config:
   default: true
   MD013: false
+  MD040: false
