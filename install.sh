@@ -35,6 +35,7 @@ if [[ "$OS" == "Darwin" ]]; then
   link hammerspoon/init.lua .hammerspoon/init.lua
   link hammerspoon/vim-in-place.lua .hammerspoon/vim-in-place.lua
   link hammerspoon/vim-overlay.lua .hammerspoon/vim-overlay.lua
+  link hammerspoon/click-hints.lua .hammerspoon/click-hints.lua
 
 # ── Linux ──────────────────────────────────────────────
 elif [[ "$OS" == "Linux" ]]; then

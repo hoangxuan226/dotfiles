@@ -23,7 +23,7 @@ Run the installation script to automatically create the necessary symlinks:
 - **Kitty** terminal emulator
 - **Hammerspoon** system management (including Vim-keybindings overlays)
 
-### Linux
+### WSL
 
 - **Bash** environment and aliases
 - **WezTerm** terminal emulator

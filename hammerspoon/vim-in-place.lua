@@ -2,6 +2,7 @@
 
 -- ── Config ─────────────────────────────────────────────────────────────
 local DEBUG = false
+local clickHints = require("click-hints")
 
 local Modes = {
 	NORMAL = "NORMAL",
@@ -22,8 +23,7 @@ local excludedApps = {
 
 -- ── State ──────────────────────────────────────────────────────────────
 local currentState = Modes.NORMAL
-local frontmostApp = hs.application.frontmostApplication()
-local currentAppName = frontmostApp and frontmostApp:name() or ""
+local currentAppName = ""
 local stateMenu = hs.menubar.new()
 
 -- Buffers for Vim counts and operators
@@ -106,9 +106,6 @@ local function executeOperator(op)
 end
 
 -- ── Key Interception ─────────────────────────────────────────────────
-dprint("[VimInPlace] Initially Focused: " .. currentAppName)
-setState(Modes.INSERT)
-
 -- Optimization: Pre-fetch key map for O(1) matching checks
 local k = hs.keycodes.map
 local KC = {
@@ -305,6 +302,11 @@ local vimTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(eve
 	isGBuffer = false -- Cancel 'g' wait if any other key pressed
 
 	-- 5. OPERATIONS & ACTIONS
+	if char == "s" and currentState == Modes.NORMAL then
+		clickHints.Draw()
+		return true
+	end
+
 	if char == "v" and currentState == Modes.NORMAL then
 		setState(Modes.VISUAL)
 		return true
@@ -385,24 +387,28 @@ local vimTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(eve
 	return false
 end)
 
-vimTap:start()
-
 -- ── Focus App Tracking ──────────────────────────────────────────────────
 local appWatcher = hs.application.watcher.new(function(appName, eventType)
 	if eventType == hs.application.watcher.activated then
 		dprint("[VimInPlace] Focused: " .. appName)
 		currentAppName = appName
 
-		-- Always default to INSERT mode when switching apps
+		-- Default to NORMAL mode when switching apps
 		if not excludedApps[appName] then
-			setState(Modes.INSERT)
+			setState(Modes.NORMAL)
 		end
 	end
 end)
 
+-- ── Main ────────────────────────────────────────────────────────────────
+local frontmostApp = hs.application.frontmostApplication()
+currentAppName = frontmostApp and frontmostApp:name() or ""
+dprint("[VimInPlace] Initially Focused: " .. currentAppName)
+setState(Modes.NORMAL)
+
+vimTap:start()
 appWatcher:start()
 
 -- Expose explicitly to G to prevent garbage collection
 _G.__vimInPlaceAppWatcher = appWatcher
 _G.__vimInPlaceTap = vimTap
-_G.setState = setState

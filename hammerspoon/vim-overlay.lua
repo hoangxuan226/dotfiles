@@ -264,15 +264,7 @@ local sentinelWatcher = hs.pathwatcher
 -- Prevent Lua Garbage Collection from silently killing them
 _G.__vimOverlayWatcher = sentinelWatcher
 
--- ── Hotkey (F19 sent by Karabiner) ────────────────────────────────────
-hs.hotkey.bind({}, "F19", showOverlay)
-
-M = {}
-M.getFocusedInfo = function()
-	hs.timer.doAfter(3, function()
-		local app, el = getFocusedInfo()
-		print(app and app:name() or "nil", hs.inspect(el))
-	end)
-end
-
-return M
+return {
+	Show = showOverlay,
+	Hide = hideOverlay,
+}

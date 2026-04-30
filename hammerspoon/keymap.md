@@ -1,5 +1,7 @@
 # Comprehensive Key Handling Mapping
 
+> **Source Script:** [`vim-in-place.lua`](./vim-in-place.lua)
+
 This reference defines the concrete step-by-step logic execution for every keystroke captured by the state machine.
 
 _(Note: "Inject `[Key]`" implies creating a macOS `CGEvent` for `KeyDown` with necessary modifiers, posting it, followed immediately by its corresponding `KeyUp` event)._
@@ -135,6 +137,11 @@ _(Note: "Inject `[Key]`" implies creating a macOS `CGEvent` for `KeyDown` with n
   - **Visual**: Inject `Cmd+C` -> Inject `Arrow Left` -> Switch to Normal -> **Suppress**.
 
 ## 4. Instant Edits & Actions
+
+- `s` (Click Hints):
+  - **Insert**: **PassThrough**.
+  - **Normal**: Triggers the [`click-hints`](./click-hints.lua) UI overlay -> **Suppress**.
+  - **Visual**: **PassThrough**.
 
 - `x` (Delete char):
   - **Insert**: **PassThrough**.

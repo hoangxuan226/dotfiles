@@ -86,7 +86,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # ================================= Key Bindings =====================================
-# kitty.conf: macos_option_as_alt yes -> option key is treated as alt (\e)
+# kitty.conf required: macos_option_as_alt yes -> option key is treated as alt (\e)
 
 # bindkey '^ ' fzf-tab-complete                    # Ctrl+Space = open fzf-tab
 # bindkey '\el' autosuggest-accept                 # Option + L = accept
