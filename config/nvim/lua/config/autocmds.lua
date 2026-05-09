@@ -25,4 +25,6 @@ else
       vim.opt_local.spell = false
     end,
   })
+
+  require("profile_debug.lsp_tree").setup()
 end

@@ -103,6 +103,7 @@ return {
     config = function(_, opts)
       require("catppuccin").setup(opts)
       vim.cmd.colorscheme("catppuccin")
+      vim.cmd("highlight! link WinSeparator FloatBorder")
     end,
   },
   -- #endregion catppuccin

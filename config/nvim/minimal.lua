@@ -48,6 +48,22 @@ require("lazy").setup({
         },
       },
     },
+    {
+      "echasnovski/mini.surround",
+      opts = {
+        mappings = {
+          add = "gsa",
+          delete = "gsd",
+          find = "gsf",
+          find_left = "gsF",
+          highlight = "gsh",
+          replace = "gsr",
+        },
+      },
+      config = function(_, opts)
+        require("mini.surround").setup(opts)
+      end,
+    },
   },
 })
 
@@ -56,6 +72,13 @@ vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
 
 vim.opt.clipboard = "unnamedplus"
+vim.g.mapleader = " "
 
--- Disable macro
-vim.keymap.set("n", "q", "<Nop>", { noremap = true, silent = true, desc = "Disable macro recording in register q" })
+-- Keymaps
+vim.keymap.set("n", "q", "<Nop>", { noremap = true, silent = true, desc = "Disable macro recording in register q" }) -- Disable macro
+vim.keymap.set({ "n", "x" }, "<leader>cf", function()
+  require("conform").format({ force = true, lsp_fallback = true })
+end, { desc = "Format", silent = true })
+
+-- Debug LSP tree on VimLeave
+require("profile_debug.lsp_tree").setup()

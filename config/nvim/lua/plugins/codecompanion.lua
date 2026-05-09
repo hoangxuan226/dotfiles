@@ -20,6 +20,37 @@ return {
       { "<leader>a", "<Nop>", desc = "AI" },
       { "<leader>aa", "<cmd>CodeCompanionActions<cr>", desc = "Actions", mode = { "n", "v" } },
       { "<leader>ac", "<cmd>CodeCompanionChat Toggle<cr>", desc = "Toggle Chat", mode = { "n", "v" } },
+      { "<leader>al", "<Nop>", desc = "Chat Layout" },
+      {
+        "<leader>alv",
+        "<cmd>lua require('codecompanion').toggle_chat({ window_opts = { layout = 'vertical', width = 0.40 } })<cr>",
+        desc = "Vertical",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>alh",
+        "<cmd>lua require('codecompanion').toggle_chat({ window_opts = { layout = 'horizontal', height = 0.4 } })<cr>",
+        desc = "Horizontal",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>alf",
+        "<cmd>lua require('codecompanion').toggle_chat({ window_opts = { layout = 'float', width = 0.7, height = 0.8 } })<cr>",
+        desc = "Float",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>alt",
+        "<cmd>lua require('codecompanion').toggle_chat({ window_opts = { layout = 'tab' } })<cr>",
+        desc = "Tab",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>alb",
+        "<cmd>lua require('codecompanion').toggle_chat({ window_opts = { layout = 'buffer' } })<cr>",
+        desc = "Buffer",
+        mode = { "n", "v" },
+      },
       { "<leader>ai", "<cmd>CodeCompanion<cr>", desc = "Inline Chat", mode = { "n", "v" } },
       { "<leader>av", "<cmd>CodeCompanionChat Add<cr>", desc = "Add code to a chat buffer", mode = { "v" } },
       {
@@ -40,9 +71,17 @@ return {
     config = function()
       -- Apply monkey-patch
       require("config.codecompanion.history.patch-history-model-restore")() -- patch model not being restored correctly from chat history
-      require("config.codecompanion.patch-gpt5-mini")() -- patch using gpt-5 mini and clearing stale param values
+      -- require("config.codecompanion.patch-gpt5-mini")() -- patch using gpt-5 mini and clearing stale param values
 
       require("codecompanion").setup({
+        display = {
+          chat = {
+            window = {
+              layout = "horizontal",
+              height = 0.4,
+            },
+          },
+        },
         interactions = {
           chat = {
             adapter = {
