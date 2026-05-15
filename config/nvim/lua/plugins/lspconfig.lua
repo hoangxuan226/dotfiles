@@ -41,10 +41,18 @@ return {
       return opts
     end,
   },
-  "seblyng/roslyn.nvim",
-  ---@module 'roslyn.config'
-  ---@type RoslynNvimConfig
-  opts = {
-    -- your configuration comes here; leave empty for default settings
+  {
+    "seblyng/roslyn.nvim",
+    ---@module 'roslyn.config'
+    ---@type RoslynNvimConfig
+    opts = {
+      -- your configuration comes here; leave empty for default settings
+      extensions = {
+        ---@diagnostic disable-next-line: missing-fields
+        razor = {
+          enabled = false,
+        },
+      },
+    },
   },
 }
