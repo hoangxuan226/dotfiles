@@ -1,8 +1,10 @@
--- click-hints.lua
 -- This module highlights clickable elements on the focused window and allows keyboard-driven clicking.
 
 -- ── Config ─────────────────────────────────────────────────────────────
-local DEBUG = false
+local log = require("lua.logger").new("ClickHints")
+
+-- Enable mouse clicking on badges for debugging purposes
+local ENABLE_DEBUG_MOUSE_CLICK = false
 
 -- Maximum depth for UI element traversal
 local MAX_DEPTH = 100
@@ -15,7 +17,7 @@ local MIN_HEIGHT = 2
 local BADGE_W = 24
 local BADGE_H = 14
 
--- Keycodes for relevant keys (ESC, Return/Enter, Delete)
+-- Keycodes for relevant keys
 local KEYS = {
 	ESC = 53,
 	RETURN = 36,
@@ -40,13 +42,6 @@ local hintMenu = nil
 local hiddenMousePos = nil
 
 -- ── Helpers ────────────────────────────────────────────────────────────
--- Print debug messages only if DEBUG is enabled
-local function dprint(...)
-	if DEBUG then
-		print(...)
-	end
-end
-
 -- Show a temporary on-screen notification
 local function notify(msg)
 	hs.alert.show(msg, 1.5)
@@ -140,7 +135,7 @@ local function findClickables(rootElement)
 		end
 	end
 
-	print("[findClickables] Found clickables:", #clickables)
+	log.i("[findClickables] Found clickables: " .. tostring(#clickables))
 end
 
 -- Draw numerical badges and highlight borders over found clickable elements
@@ -201,7 +196,7 @@ local function drawHints(win)
 		})
 
 		-- Store badge frame conditionally for debug clicking
-		if DEBUG then
+		if ENABLE_DEBUG_MOUSE_CLICK then
 			item.badgeFrame = {
 				x = badgeX + sFrame.x,
 				y = badgeY + sFrame.y,
@@ -226,7 +221,7 @@ local function drawHints(win)
 	hiddenMousePos = { x = sFrame.x + sFrame.w - 1, y = sFrame.y + (sFrame.h / 2) }
 	hs.mouse.absolutePosition(hiddenMousePos)
 
-	print("[drawHints] Drew overlay canvas with", #elements, "elements")
+	log.i("[drawHints] Drew overlay canvas with " .. tostring(#elements) .. " elements")
 end
 
 -- Check if mouse click coordinates fall inside an element's badge
@@ -247,15 +242,15 @@ local function startInputMode()
 	updateMenu()
 
 	-- Setup mouse click interception if in debug mode
-	if DEBUG then
+	if ENABLE_DEBUG_MOUSE_CLICK then
 		table.insert(eventsToListen, hs.eventtap.event.types.leftMouseDown)
 	end
 
 	tap = hs.eventtap.new(eventsToListen, function(e)
 		local eventType = e:getType()
 
-		-- Handle debug clicking on badges if DEBUG is true
-		if DEBUG and eventType == hs.eventtap.event.types.leftMouseDown then
+		-- Handle debug clicking on badges if debug mode is enabled
+		if ENABLE_DEBUG_MOUSE_CLICK and eventType == hs.eventtap.event.types.leftMouseDown then
 			local pt = e:location()
 			if handleDebugMouseClick(pt) then
 				return true
@@ -263,7 +258,7 @@ local function startInputMode()
 
 			-- If click missed badges, cleanly exit and allow native OS handling
 			exitMode()
-			dprint("[startInputMode] Canceled clickable mode via mouse click")
+			log.d("[startInputMode] Canceled clickable mode via mouse click")
 			return false
 		end
 
@@ -272,7 +267,7 @@ local function startInputMode()
 
 		if keyCode == KEYS.ESC then
 			exitMode()
-			dprint("[startInputMode] Canceled clickable mode")
+			log.d("[startInputMode] Canceled clickable mode")
 			return true
 		elseif keyCode == KEYS.RETURN or keyCode == KEYS.SPACE then
 			local num = tonumber(typedNumber)
@@ -282,25 +277,23 @@ local function startInputMode()
 				local frame = clickables[num].frame
 				local centerPt = { x = frame.x + (frame.w / 2), y = frame.y + (frame.h / 2) }
 				hs.eventtap.leftClick(centerPt)
-				dprint(
-					string.format("[startInputMode] Clicked element %d at (%.1f, %.1f)", num, centerPt.x, centerPt.y)
-				)
+				log.d(string.format("[startInputMode] Clicked element %d at (%.1f, %.1f)", num, centerPt.x, centerPt.y))
 
 				-- Snap the cursor back to the hidden edge after the native click is registered
 				hs.mouse.absolutePosition(hiddenMousePos)
 			else
-				dprint("[startInputMode] Invalid number or element not found")
+				log.d("[startInputMode] Invalid number or element not found")
 			end
 			return true
 		elseif keyCode == KEYS.DELETE then
 			typedNumber = string.sub(typedNumber, 1, -2)
 			updateMenu()
-			dprint("[startInputMode] Typed: " .. typedNumber)
+			log.d("[startInputMode] Typed: " .. typedNumber)
 			return true
 		elseif char and char:match("%d") then
 			typedNumber = typedNumber .. char
 			updateMenu()
-			dprint("[startInputMode] Typed: " .. typedNumber)
+			log.d("[startInputMode] Typed: " .. typedNumber)
 			return true
 		end
 
@@ -316,14 +309,14 @@ local function Draw()
 
 	local win = hs.window.focusedWindow()
 	if not win then
-		dprint("[Draw] No focused window found")
+		log.d("[Draw] No focused window found")
 		notify("No focused window found")
 		return
 	end
 
 	local axWin = hs.axuielement.windowElement(win)
 	if not axWin then
-		dprint("[Draw] No accessibility window element found")
+		log.d("[Draw] No accessibility window element found")
 		notify("No window element found")
 		return
 	end
@@ -336,7 +329,7 @@ end
 -- Trigger to exit clickable mode
 local Eraser = function()
 	exitMode()
-	dprint("[Eraser] Canceled clickable mode.")
+	log.d("[Eraser] Canceled clickable mode.")
 end
 
 -- API to debug print element info manually via Hammerspoon Console

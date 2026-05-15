@@ -1,64 +1,72 @@
--- ~/.hammerspoon/vim-overlay.lua
-
 -- ── Config ─────────────────────────────────────────────────────────────
-local DEBUG = false
-
--- Kitty
-local KITTY_TITLE = "kitty-quick-access" -- default title of panel created by `kitten quick-access-terminal`
+local log = require("lua.logger").new("VimOverlay", "info")
+local constants = require("lua.vim-overlay.share")
 
 -- Apps where the overlay should never appear.
 local IGNORED_APPS = {
-	[KITTY_TITLE] = true,
+	["kitty-quick-access"] = true,
 	["kitty"] = true,
 	["Terminal"] = true,
 	["Spotlight"] = true,
 }
 
--- Temp
-local PATH_WATCHER = os.getenv("HOME") .. "/.hammerspoon/vim-overlay-tmp/"
-local TEMP_FILE = PATH_WATCHER .. "vim_overlay.txt"
-local SENTINEL = PATH_WATCHER .. "vim_overlay_done"
+-- Kitty
+local MIN_LINES = 5
+local MAX_LINES = 5
 
 -- Nvim
-local NVIM_OVERLAY_INIT = os.getenv("HOME") .. "/.config/nvim/overlay.lua"
+local NVIM_OVERLAY_INIT = os.getenv("HOME") .. "/.hammerspoon/lua/vim-overlay/nvim-init.lua"
 local NVIM_SOCKET = "/tmp/nvim-overlay.sock"
 
 -- Command
-local TOGGLE_KITTY_PANEL_CMD = "kitten quick-access-terminal"
-local START_OVERLAY_CMD =
-	string.format("%s nvim -u %s --listen %s %s", TOGGLE_KITTY_PANEL_CMD, NVIM_OVERLAY_INIT, NVIM_SOCKET, TEMP_FILE)
+local START_OVERLAY_CMD = string.format(
+	"%s -o start_as_hidden=yes nvim -u %s --listen %s %s",
+	constants.TOGGLE_KITTY_PANEL_CMD,
+	NVIM_OVERLAY_INIT,
+	NVIM_SOCKET,
+	constants.TEMP_FILE
+)
 local RESET_NVIM_BUFFER =
-	string.format("nvim --server %s --remote-send '<Esc>:e! %s<CR>' 2>/dev/null", NVIM_SOCKET, TEMP_FILE)
+	string.format("nvim --server %s --remote-send '<Esc>:e! %s<CR>' 2>/dev/null", NVIM_SOCKET, constants.TEMP_FILE)
 
 -- ── State ──────────────────────────────────────────────────────────────
 local previousApp = nil -- app to return focus to after paste-back
+local overlayPid = nil -- PID of the kitty instance running the overlay
 
 -- ── Helpers ────────────────────────────────────────────────────────────
-local function dprint(...)
-	if DEBUG then
-		print(...)
-	end
-end
-
 local function notify(msg)
 	hs.alert.show(msg, 1.5)
 end
 
 -- Get the focused axuielement.
 local function getFocusedInfo()
-	-- Use frontmostApplication instead of walking the AX tree (el:attributeValue("AXWindow")).
-	-- This completely skips heavy IPC UI-crawling overhead and avoids lagging/timeouts on bloated apps.
-	local app = hs.application.frontmostApplication()
 	local sys = hs.axuielement.systemWideElement()
 	local _, el = pcall(function()
 		return sys:attributeValue("AXFocusedUIElement")
 	end)
+
+	-- hs.application.frontmostApplication() cannot return Spotlight,
+	-- because Spotlight's panels run as background processes and don't become "frontmost",
+	-- so traverse from the focused element to get the app.
+	local app = nil
+	if el then
+		local pid = el:pid()
+		if pid then
+			app = hs.application.get(pid)
+		end
+	end
+
+	-- Fallback to frontmostApplication
+	if not app then
+		app = hs.application.frontmostApplication()
+	end
+
 	return app, el
 end
 
 -- Get overlay panel (hs.application).
 local function getOverlayApp()
-	return hs.application.get(KITTY_TITLE)
+	return hs.application.get(overlayPid)
 end
 
 -- toggle overlay visibility.
@@ -68,32 +76,32 @@ local function toggleOverlay(lines, show)
 
 	-- Kitty quick access terminal has not started, do nothing
 	if app == nil then
-		dprint("[toggleOverlay] Quick access terminal not started, doing nothing.")
+		log.d("[toggleOverlay] Quick access terminal not started, doing nothing.")
 		return
 	end
 
 	local isShowing = #app:allWindows() > 0
 	if show ~= nil then
 		if show and isShowing then
-			dprint("[toggleOverlay] Requested to show, but it is already showing. Ignoring.")
+			log.d("[toggleOverlay] Requested to show, but it is already showing. Ignoring.")
 			return
 		elseif not show and not isShowing then
-			dprint("[toggleOverlay] Requested to hide, but it is already hidden. Ignoring.")
+			log.d("[toggleOverlay] Requested to hide, but it is already hidden. Ignoring.")
 			return
 		end
 	end
 
 	lines = tonumber(lines) -- Ensure lines is safely treated as a number
-	lines = math.max(1, lines or 1) -- Enforce a minimum of 1 line
+	lines = math.max(MIN_LINES, math.min(MAX_LINES, lines or 1))
 
-	local cmd = TOGGLE_KITTY_PANEL_CMD .. string.format(" -o lines=%d", lines)
-	dprint("[toggleOverlay] Executing command: " .. cmd)
+	local cmd = constants.TOGGLE_KITTY_PANEL_CMD .. string.format(" -o lines=%d", lines)
+	log.d("[toggleOverlay] Executing command: " .. cmd)
 	local task = hs.task.new(os.getenv("SHELL"), function(code)
-		dprint("[toggleOverlay] Command exited with code: " .. tostring(code))
-	end, { "-l", "-c", cmd })
+		log.d("[toggleOverlay] Command exited with code: " .. tostring(code))
+	end, { "-c", cmd })
 
 	if not task:start() then
-		dprint("[toggleOverlay] ERROR: Failed to start the task!")
+		log.d("[toggleOverlay] ERROR: Failed to start the task!")
 	end
 end
 
@@ -102,7 +110,7 @@ end
 local function ensureOverlayRunning(callback)
 	-- nvim socket already exists — overlay is running and ready
 	if hs.fs.attributes(NVIM_SOCKET) then
-		dprint("[ensureOverlayRunning] socket already exists, skipping launch")
+		log.d("[ensureOverlayRunning] socket already exists, skipping launch")
 		callback(true)
 		return
 	end
@@ -116,26 +124,33 @@ local function ensureOverlayRunning(callback)
 	end
 
 	-- Neither socket nor panel — full fresh launch
-	dprint("[ensureOverlayRunning] launching overlay Kitty asynchronously")
+	log.d("[ensureOverlayRunning] launching overlay Kitty asynchronously")
 
 	local task = hs.task.new(os.getenv("SHELL"), function(code)
-		dprint("[ensureOverlayRunning] overlayTask exited, code: " .. tostring(code))
-	end, { "-l", "-c", START_OVERLAY_CMD })
+		log.d("[ensureOverlayRunning] overlayTask exited, code: " .. tostring(code))
+	end, { "-c", START_OVERLAY_CMD })
+	log.d("[ensureOverlayRunning] Starting task with command: " .. START_OVERLAY_CMD)
 
 	if not task:start() then
-		dprint("[ensureOverlayRunning] ERROR: Failed to start the task!")
+		log.d("[ensureOverlayRunning] ERROR: Failed to start the task!")
 	end
 
 	local elapsed = 0
 	local poller
+	local findPidCmd = string.format("pgrep -f '%s'", constants.KITTY_INSTANCE_GROUP)
+	log.d("[ensureOverlayRunning] command to find PID: " .. tostring(findPidCmd))
 	poller = hs.timer.doEvery(0.2, function()
 		elapsed = elapsed + 0.2
-		if hs.fs.attributes(NVIM_SOCKET) then
-			dprint("[ensureOverlayRunning] nvim socket appeared after " .. string.format("%.1f", elapsed) .. "s")
+
+		local output = hs.execute(findPidCmd)
+		overlayPid = tonumber(output:match("%d+"))
+		log.d("[ensureOverlayRunning] PID of kitty: " .. tostring(overlayPid))
+		if overlayPid and hs.fs.attributes(NVIM_SOCKET) then
+			log.d("[ensureOverlayRunning] nvim socket appeared after " .. string.format("%.1f", elapsed) .. "s")
 			poller:stop()
 			callback(true)
 		elseif elapsed >= 4 then
-			dprint("[ensureOverlayRunning] timed out after 4s")
+			log.d("[ensureOverlayRunning] timed out after 4s")
 			poller:stop()
 			notify("Overlay Kitty failed to start")
 			callback(false)
@@ -146,15 +161,16 @@ end
 -- ── Snapshot current field text into temp file ─────────────────────────
 -- Returns the number of lines in the text, which is used to size the overlay panel.
 local function snapshotFieldText(el)
-	local text = ""
-	if el then
-		local ok, val = pcall(function()
-			return el:attributeValue("AXValue")
-		end)
-		text = (ok and type(val) == "string") and val or ""
-	else
-		notify("Cannot get focused element")
+	if not el then
+		log.d("[snapshotFieldText] No element provided")
+		return -1
 	end
+
+	local text = ""
+	local ok, val = pcall(function()
+		return el:attributeValue("AXValue")
+	end)
+	text = (ok and type(val) == "string") and val or ""
 
 	local lines = 0
 	if text and text ~= "" then
@@ -163,7 +179,7 @@ local function snapshotFieldText(el)
 		lines = newlineCount + 1
 	end
 
-	local f = io.open(TEMP_FILE, "w")
+	local f = io.open(constants.TEMP_FILE, "w")
 	if f then
 		f:write(text)
 		f:close()
@@ -176,23 +192,23 @@ end
 local function resetNvimBuffer()
 	local sock = hs.fs.attributes(NVIM_SOCKET)
 	if not sock then
-		dprint("[resetNvimBuffer] nvim socket not found at expected path: " .. NVIM_SOCKET)
+		log.d("[resetNvimBuffer] nvim socket not found at expected path: " .. NVIM_SOCKET)
 		notify("nvim socket not found")
 		return false
 	end
 	local task = hs.task.new(os.getenv("SHELL"), function(code)
-		dprint("[resetNvimBuffer] resetTask exited, code: " .. tostring(code))
+		log.d("[resetNvimBuffer] resetTask exited, code: " .. tostring(code))
 	end, { "-l", "-c", RESET_NVIM_BUFFER })
 
 	if not task:start() then
-		dprint("[resetNvimBuffer] ERROR: Failed to start the task!")
+		log.d("[resetNvimBuffer] ERROR: Failed to start the task!")
 	end
 	return true
 end
 
 -- ── Paste-back: temp file → clipboard → real field ────────────────────
 local function pasteBack()
-	local f = io.open(TEMP_FILE, "r")
+	local f = io.open(constants.TEMP_FILE, "r")
 	if not f then
 		return
 	end
@@ -205,16 +221,16 @@ local function pasteBack()
 	hs.pasteboard.setContents(text)
 
 	if not previousApp then
-		dprint("[pasteBack] No previous app to return focus to")
+		log.d("[pasteBack] No previous app to return focus to")
 		return
 	end
 
 	if previousApp:activate() then
-		dprint("[pasteBack] app activated successfully, sending keystrokes")
+		log.d("[pasteBack] app activated successfully, sending keystrokes")
 		hs.eventtap.keyStroke({ "cmd" }, "a", 50000) -- select all existing text
 		hs.eventtap.keyStroke({ "cmd" }, "v", 50000) -- paste
 	else
-		dprint("[pasteBack] Failed to activate previous app")
+		log.d("[pasteBack] Failed to activate previous app")
 	end
 end
 
@@ -222,15 +238,21 @@ end
 local function showOverlay()
 	local app, focusedEl = getFocusedInfo()
 	local name = (app and app:name()) or ""
-	dprint("[showOverlay] app: " .. name)
+	log.d("[showOverlay] app: " .. name .. ", el: " .. (focusedEl and focusedEl:attributeValue("AXRole") or "nil"))
 	if IGNORED_APPS[name] then
 		notify("Overlay ignored for: " .. name)
 		return
 	end
 
+	local lines = snapshotFieldText(focusedEl)
+	if lines < 0 then
+		notify("Failed to snapshot field text")
+		return
+	end
+
 	ensureOverlayRunning(function(ready)
 		if not ready then
-			dprint("[showOverlay] callback return false, aborting showOverlay")
+			log.d("[showOverlay] callback return false, aborting showOverlay")
 			notify("Overlay not found")
 			return
 		end
@@ -239,7 +261,6 @@ local function showOverlay()
 		end
 
 		previousApp = app
-		local lines = snapshotFieldText(focusedEl)
 		toggleOverlay(lines, true)
 	end)
 end
@@ -251,10 +272,10 @@ end
 
 -- ── Sentinel watcher: Neovim signals paste-back is ready ──────────────
 local sentinelWatcher = hs.pathwatcher
-	.new(PATH_WATCHER, function()
-		if hs.fs.attributes(SENTINEL) then
-			dprint("[watcher] triggered for SENTINEL")
-			os.remove(SENTINEL)
+	.new(constants.PATH_WATCHER, function()
+		if hs.fs.attributes(constants.SENTINEL) then
+			log.d("[watcher] triggered for SENTINEL")
+			os.remove(constants.SENTINEL)
 			pasteBack()
 			hideOverlay()
 		end
@@ -267,4 +288,17 @@ _G.__vimOverlayWatcher = sentinelWatcher
 return {
 	Show = showOverlay,
 	Hide = hideOverlay,
+	Focus = function()
+		print("Please focus some app/field within 3 seconds to see debug info in console...")
+		hs.timer.doAfter(3, function()
+			local app, el = getFocusedInfo()
+			local pid = (app and app:pid()) or "N/A"
+			local name = (app and app:name()) or ""
+			local role = (el and el:attributeValue("AXRole")) or ""
+			print("Focused app: (" .. pid .. ") " .. name .. ", el:" .. role)
+
+			local attributes = el:attributeNames()
+			print("el's attributes:" .. hs.inspect(attributes))
+		end)
+	end,
 }

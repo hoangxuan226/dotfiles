@@ -1,8 +1,6 @@
--- ~/.hammerspoon/vim-in-place.lua
-
 -- ── Config ─────────────────────────────────────────────────────────────
-local DEBUG = false
-local clickHints = require("click-hints")
+local log = require("lua.logger").new("VimInPlace")
+local clickHints = require("lua.click-hints")
 
 local Modes = {
 	NORMAL = "NORMAL",
@@ -17,6 +15,7 @@ local icons = {
 }
 
 local excludedApps = {
+	["kitty-quick-access"] = true,
 	["kitty"] = true,
 	["Terminal"] = true,
 }
@@ -32,12 +31,6 @@ local operatorBuffer = ""
 local isGBuffer = false -- tracks if 'g' was pressed once
 
 -- ── Helpers ────────────────────────────────────────────────────────────
-local function dprint(...)
-	if DEBUG then
-		print(...)
-	end
-end
-
 local function notify(msg)
 	hs.alert.show(msg, 1.5)
 end
@@ -193,7 +186,7 @@ local vimTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(eve
 	-- 4. DIGITS (Count buffer)
 	if type(char) == "string" and char:match("^[1-9]$") and operatorBuffer == "" and currentState == Modes.NORMAL then
 		countBuffer = countBuffer .. char
-		dprint("Count: ", countBuffer)
+		log.d("Count: " .. countBuffer)
 		return true
 	end
 	if char == "0" and countBuffer ~= "" and currentState == Modes.NORMAL then
@@ -390,21 +383,16 @@ end)
 -- ── Focus App Tracking ──────────────────────────────────────────────────
 local appWatcher = hs.application.watcher.new(function(appName, eventType)
 	if eventType == hs.application.watcher.activated then
-		dprint("[VimInPlace] Focused: " .. appName)
+		log.d("Focused: " .. appName)
 		currentAppName = appName
-
-		-- Default to NORMAL mode when switching apps
-		if not excludedApps[appName] then
-			setState(Modes.NORMAL)
-		end
 	end
 end)
 
 -- ── Main ────────────────────────────────────────────────────────────────
 local frontmostApp = hs.application.frontmostApplication()
 currentAppName = frontmostApp and frontmostApp:name() or ""
-dprint("[VimInPlace] Initially Focused: " .. currentAppName)
-setState(Modes.NORMAL)
+log.d("Initially Focused: " .. currentAppName)
+setState(Modes.INSERT)
 
 vimTap:start()
 appWatcher:start()

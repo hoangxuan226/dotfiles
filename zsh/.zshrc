@@ -94,6 +94,8 @@ bindkey '\e\t' autosuggest-accept                 # Option + Tab = accept
 # bindkey '\e\t' forward-word                      # Option + Tab = partial accept
 
 # ====================================================================================
+# For fullpath showing
+PROMPT='%n %~ %# '
 
 # echo "zshrc loaded in $(($SECONDS * 1000))ms"
 # fastfetch

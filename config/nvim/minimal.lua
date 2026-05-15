@@ -64,6 +64,22 @@ require("lazy").setup({
         require("mini.surround").setup(opts)
       end,
     },
+    {
+      "sphamba/smear-cursor.nvim",
+      opts = {
+        hide_target_hack = false,
+      },
+      specs = {
+        -- disable mini.animate cursor
+        {
+          "nvim-mini/mini.animate",
+          optional = true,
+          opts = {
+            cursor = { enable = true },
+          },
+        },
+      },
+    },
   },
 })
 
